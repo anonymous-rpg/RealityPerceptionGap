@@ -171,13 +171,20 @@
         padding: 4px 11px;
         letter-spacing: 0.14em;
         text-decoration: none;
-        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        text-shadow: 0 0 2px rgba(184, 55, 31, 0.35);
+        box-shadow: 0 0 10px rgba(184, 55, 31, 0.24), inset 0 0 8px rgba(184, 55, 31, 0.08);
+        animation: benchmark-glow 2.25s ease-in-out infinite;
+        transition: background 0.2s ease, color 0.2s ease, filter 0.2s ease, transform 0.2s ease;
       }
 
       .hf-button:hover,
       .hf-button:focus-visible {
         background: var(--accent);
         color: var(--paper);
+        filter: saturate(0.62);
+        text-shadow: 0 0 8px rgba(243, 236, 220, 0.82), 0 0 18px rgba(243, 236, 220, 0.42);
+        box-shadow: 0 0 26px rgba(184, 55, 31, 0.68), 0 0 52px rgba(184, 55, 31, 0.28), inset 0 0 12px rgba(243, 236, 220, 0.16);
+        animation: none;
         transform: translateY(-1px);
       }
 
@@ -185,6 +192,21 @@
         width: 20px;
         height: 20px;
         flex: 0 0 auto;
+      }
+
+      @keyframes benchmark-glow {
+        0%,
+        100% {
+          filter: saturate(1);
+          text-shadow: 0 0 2px rgba(184, 55, 31, 0.35);
+          box-shadow: 0 0 10px rgba(184, 55, 31, 0.24), inset 0 0 8px rgba(184, 55, 31, 0.08);
+        }
+
+        50% {
+          filter: saturate(0.58);
+          text-shadow: 0 0 8px rgba(184, 55, 31, 0.68), 0 0 18px rgba(184, 55, 31, 0.38);
+          box-shadow: 0 0 24px rgba(184, 55, 31, 0.56), 0 0 44px rgba(184, 55, 31, 0.22), inset 0 0 12px rgba(184, 55, 31, 0.16);
+        }
       }
 
       .hero-actions {
@@ -833,6 +855,12 @@
           filter: saturate(1.15) brightness(1.02) drop-shadow(0 0 10px rgba(184, 55, 31, 0.28));
         }
 
+        .hf-button {
+          animation: none;
+          filter: saturate(0.72);
+          box-shadow: 0 0 12px rgba(184, 55, 31, 0.22);
+        }
+
         .clip,
         .clip-frame::before {
           transition: none;
@@ -871,7 +899,7 @@
               <path d="M26.9 20.4c3.9.8 6.2 3.4 5.3 5.7-.8 2.1-4.7 1.7-7.5-1.2" fill="#ffcc4d" stroke="#5f4420" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
               <path d="M9.5 23.4c-1.2.5-2.1 1.3-2.5 2.2M26.5 23.4c1.2.5 2.1 1.3 2.5 2.2" fill="none" stroke="#5f4420" stroke-width="1.2" stroke-linecap="round"></path>
             </svg>
-            <span>Benchmark</span>
+            <span>Link to Benchmark</span>
           </a>
         </div>
       </div>
