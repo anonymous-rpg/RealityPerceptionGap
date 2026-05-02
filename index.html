@@ -241,14 +241,18 @@
         width: 100%;
         height: 100%;
         filter: saturate(0.42) brightness(0.92) drop-shadow(0 0 0 rgba(184, 55, 31, 0));
-        animation: rpg-glow 3.2s ease-in-out infinite;
+        transform-origin: center bottom;
+        animation:
+          rpg-glow 3.2s ease-in-out infinite,
+          rpg-jump 1.65s cubic-bezier(0.32, 0.72, 0.34, 1) infinite;
         object-fit: contain;
         mix-blend-mode: multiply;
+        will-change: filter, transform;
       }
 
       .signet:hover img,
       .signet:focus-visible img {
-        animation-duration: 1.4s;
+        animation-duration: 1.4s, 1s;
       }
 
       @keyframes rpg-glow {
@@ -259,6 +263,25 @@
 
         50% {
           filter: saturate(1.75) brightness(1.12) drop-shadow(0 0 18px rgba(184, 55, 31, 0.5));
+        }
+      }
+
+      @keyframes rpg-jump {
+        0%,
+        100% {
+          transform: translateY(0) scaleY(1);
+        }
+
+        36% {
+          transform: translateY(-16px) scaleY(1.02);
+        }
+
+        54% {
+          transform: translateY(0) scaleY(0.97);
+        }
+
+        68% {
+          transform: translateY(-5px) scaleY(1.01);
         }
       }
 
@@ -383,6 +406,18 @@
         margin: 0;
         color: var(--ink-soft);
         font-size: 16px;
+      }
+
+      .contrib ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--ink-soft);
+        font-size: 16px;
+        line-height: 1.55;
+      }
+
+      .contrib li::marker {
+        color: var(--accent);
       }
 
       .kicker {
@@ -875,23 +910,38 @@
             <article class="contrib">
               <div class="contrib-title">
                 <div class="idx">i.</div>
-                <h3>Socially fragile content</h3>
+                <h3>Socially Fragile Content</h3>
               </div>
-              <p>Crime, disaster, surveillance, traffic, and conflict scenes target domains where video authenticity carries practical consequence.</p>
+              <ul>
+                <li>Crime</li>
+                <li>Natural Disaster</li>
+                <li>CCTV</li>
+                <li>Traffic</li>
+                <li>War</li>
+              </ul>
             </article>
             <article class="contrib">
               <div class="contrib-title">
                 <div class="idx">ii.</div>
-                <h3>Coupled distribution shifts</h3>
+                <h3>Coupled Distribution Shifts</h3>
               </div>
-              <p>Compression, re-encoding, post-processing, and camera artifacts are modeled together rather than as isolated clean-room perturbations.</p>
+              <ul>
+                <li>Social Media Compression</li>
+                <li>Retiming</li>
+                <li>Center Crop</li>
+                <li>Camera Optical Artifacts</li>
+              </ul>
             </article>
             <article class="contrib">
               <div class="contrib-title">
                 <div class="idx">iii.</div>
-                <h3>Hybrid manipulation</h3>
+                <h3>Hybrid Manipulation</h3>
               </div>
-              <p>RPG includes partially edited videos such as character replacement, video extension, and relighting, beyond the fully synthetic regime.</p>
+              <ul>
+                <li>Character Replacement</li>
+                <li>Video Extension</li>
+                <li>Relighting</li>
+              </ul>
             </article>
           </div>
         </div>
