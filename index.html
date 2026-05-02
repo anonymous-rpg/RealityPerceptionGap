@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Reality Perception Gap | Evaluating AI-Manipulated Video Detectors under Real-World Distribution Shifts</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f3ecdc;
+        --paper-deep: #ebe2cc;
+        --paper-line: #d8cdb1;
+        --ink: #14110a;
+        --ink-soft: #4a4133;
+        --ink-faint: #8a7e66;
+        --accent: #b8371f;
+        --accent-soft: #d8a89a;
+        --authentic: #2a4f36;
+        --shadow: 0 2px 0 rgba(20, 17, 10, 0.06), 0 14px 30px -18px rgba(20, 17, 10, 0.25);
+        --serif-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+        --serif-body: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+        --mono: "SFMono-Regular", "JetBrains Mono", Consolas, ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--serif-body);
+        font-size: 18px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0.34;
+        mix-blend-mode: multiply;
+        background-image:
+          radial-gradient(1px 1px at 20px 30px, rgba(0, 0, 0, 0.08) 50%, transparent 50%),
+          radial-gradient(1px 1px at 70px 130px, rgba(0, 0, 0, 0.08) 50%, transparent 50%),
+          radial-gradient(1px 1px at 150px 60px, rgba(0, 0, 0, 0.04) 50%, transparent 50%),
+          radial-gradient(1px 1px at 200px 200px, rgba(0, 0, 0, 0.08) 50%, transparent 50%);
+        background-size: 220px 220px;
+      }
+
+      ::selection {
+        background: var(--accent);
+        color: var(--paper);
+      }
+
+      a {
+        color: inherit;
+        text-decoration-color: var(--accent-soft);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 4px;
+      }
+
+      a:hover {
+        color: var(--accent);
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      p {
+        margin-top: 0;
+      }
+
+      .wrap {
+        position: relative;
+        z-index: 2;
+        width: min(1180px, calc(100% - 64px));
+        margin: 0 auto;
+      }
+
+      .wrap--narrow {
+        max-width: 760px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        border-bottom: 1px solid var(--paper-line);
+        background: rgba(243, 236, 220, 0.94);
+        padding: 16px 0;
+        color: var(--ink-soft);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        backdrop-filter: blur(14px);
+      }
+
+      .topbar .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+
+      .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        margin-right: 8px;
+        border-radius: 999px;
+        background: var(--accent);
+        vertical-align: middle;
+        animation: pulse 2.4s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+
+        50% {
+          opacity: 0.35;
+        }
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 6px 22px;
+      }
+
+      nav a {
+        color: var(--ink-soft);
+        text-decoration: none;
+      }
+
+      nav a:hover {
+        color: var(--accent);
+      }
+
+      .hero {
+        position: relative;
+        border-bottom: 1px solid var(--paper-line);
+        padding: 80px 0 56px;
+      }
+
+      .hf-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 27px;
+        border: 1px solid var(--accent);
+        background: rgba(184, 55, 31, 0.07);
+        color: var(--accent);
+        padding: 4px 11px;
+        letter-spacing: 0.14em;
+        text-decoration: none;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      }
+
+      .hf-button:hover,
+      .hf-button:focus-visible {
+        background: var(--accent);
+        color: var(--paper);
+        transform: translateY(-1px);
+      }
+
+      .hf-logo {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+      }
+
+      .hero-actions {
+        display: flex;
+        margin-top: -10px;
+      }
+
+      .hero h1 {
+        max-width: 1120px;
+        margin: 0 0 28px;
+        padding-right: min(6vw, 72px);
+        font-family: var(--serif-display);
+        font-size: clamp(38px, 5.55vw, 78px);
+        font-weight: 380;
+        letter-spacing: -0.025em;
+        line-height: 1;
+        hyphens: none;
+        text-wrap: balance;
+      }
+
+      .hero h1 em {
+        color: var(--accent);
+        font-style: italic;
+      }
+
+      .nowrap {
+        white-space: nowrap;
+      }
+
+      .signet {
+        position: absolute;
+        top: 44px;
+        right: 32px;
+        display: block;
+        width: clamp(128px, 11.5vw, 172px);
+        aspect-ratio: 1;
+        transform: rotate(-5deg);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .signet:hover,
+      .signet:focus-visible {
+        opacity: 0.9;
+        transform: rotate(-5deg) translateY(-3px);
+      }
+
+      .signet:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 8px;
+      }
+
+      .signet img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        filter: saturate(0.42) brightness(0.92) drop-shadow(0 0 0 rgba(184, 55, 31, 0));
+        animation: rpg-glow 3.2s ease-in-out infinite;
+        object-fit: contain;
+        mix-blend-mode: multiply;
+      }
+
+      .signet:hover img,
+      .signet:focus-visible img {
+        animation-duration: 1.4s;
+      }
+
+      @keyframes rpg-glow {
+        0%,
+        100% {
+          filter: saturate(0.42) brightness(0.92) drop-shadow(0 0 0 rgba(184, 55, 31, 0));
+        }
+
+        50% {
+          filter: saturate(1.75) brightness(1.12) drop-shadow(0 0 18px rgba(184, 55, 31, 0.5));
+        }
+      }
+
+      section {
+        scroll-margin-top: 84px;
+        border-bottom: 1px solid var(--paper-line);
+        padding: 80px 0;
+      }
+
+      .sec-head {
+        display: flex;
+        align-items: baseline;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 36px;
+      }
+
+      .sec-head .num {
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .sec-head h2 {
+        margin: 0;
+        font-family: var(--serif-display);
+        font-size: clamp(28px, 4vw, 46px);
+        font-weight: 360;
+        letter-spacing: -0.018em;
+        line-height: 1.05;
+      }
+
+      .sec-head h2 em {
+        color: var(--accent);
+        font-style: italic;
+      }
+
+      .sec-head .rule {
+        flex: 1;
+        min-width: 40px;
+        border-bottom: 1px solid var(--paper-line);
+        align-self: flex-end;
+        padding-bottom: 8px;
+      }
+
+      .abstract {
+        max-width: 980px;
+        color: var(--ink-soft);
+        font-size: clamp(18px, 1.65vw, 22px);
+        line-height: 1.55;
+      }
+
+      .abstract p {
+        margin: 0 0 18px;
+      }
+
+      .abstract p:first-child::first-letter {
+        float: left;
+        padding: 6px 10px 0 0;
+        color: var(--accent);
+        font-family: var(--serif-display);
+        font-size: 64px;
+        font-weight: 400;
+        line-height: 0.9;
+      }
+
+      .contribs,
+      .findings {
+        display: grid;
+        gap: 1px;
+        border: 1px solid var(--paper-line);
+        background: var(--paper-line);
+      }
+
+      .contribs {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .contrib,
+      .finding {
+        background: var(--paper);
+        padding: 28px 26px;
+      }
+
+      .contrib-title {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .contrib .idx {
+        flex: 0 0 auto;
+        margin: 0;
+        color: var(--accent);
+        font-family: var(--serif-display);
+        font-size: 36px;
+        font-style: italic;
+        line-height: 1;
+      }
+
+      .contrib h3,
+      .finding h4 {
+        margin: 0;
+        font-family: var(--serif-display);
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .contrib h3 {
+        font-size: 20px;
+      }
+
+      .finding h4 {
+        margin-bottom: 10px;
+      }
+
+      .contrib p,
+      .finding p {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 16px;
+      }
+
+      .kicker {
+        margin-bottom: 16px;
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .group {
+        margin-bottom: 80px;
+        scroll-margin-top: 84px;
+      }
+
+      .group:last-child {
+        margin-bottom: 0;
+      }
+
+      .group-head {
+        display: grid;
+        grid-template-columns: 88px 1fr;
+        gap: 24px;
+        align-items: baseline;
+        margin-bottom: 28px;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 16px;
+      }
+
+      .group-tag {
+        align-self: end;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        line-height: 1;
+        padding: 7px 0;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .group-head h3 {
+        margin: 0;
+        font-family: var(--serif-display);
+        font-size: clamp(24px, 3vw, 32px);
+        font-weight: 400;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+      }
+
+      .group-head h3 em {
+        color: var(--accent);
+        font-style: italic;
+      }
+
+      .group-blurb {
+        max-width: 720px;
+        margin: -8px 0 24px;
+        color: var(--ink-soft);
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 22px;
+      }
+
+      .grid--four {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid--three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .clip {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--paper-line);
+        background: var(--paper-deep);
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+      }
+
+      .clip:hover,
+      .clip:focus-within {
+        box-shadow: var(--shadow);
+        transform: translateY(-3px);
+      }
+
+      .clip-frame {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        background: #0a0807;
+      }
+
+      .clip-frame video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: #0a0807;
+        object-fit: contain;
+      }
+
+      .clip-frame::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        opacity: 0;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0) 0,
+          rgba(255, 255, 255, 0) 2px,
+          rgba(0, 0, 0, 0.07) 3px,
+          rgba(0, 0, 0, 0.07) 3px
+        );
+        transition: opacity 0.4s;
+      }
+
+      .clip:hover .clip-frame::before {
+        opacity: 0.8;
+      }
+
+      .clip-frame::after {
+        content: attr(data-fallback);
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: rgba(243, 236, 220, 0.45);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        opacity: 0;
+        pointer-events: none;
+        text-transform: uppercase;
+      }
+
+      .clip-frame.missing::after {
+        opacity: 1;
+      }
+
+      .expand-button,
+      .dialog-close {
+        appearance: none;
+        position: absolute;
+        z-index: 5;
+        display: grid;
+        min-width: 38px;
+        height: 34px;
+        place-items: center;
+        border: 1px solid rgba(243, 236, 220, 0.58);
+        background: rgba(10, 8, 7, 0.68);
+        color: var(--paper);
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .expand-button {
+        top: 10px;
+        right: 10px;
+      }
+
+      .expand-button:hover,
+      .dialog-close:hover {
+        border-color: var(--accent);
+        background: var(--accent);
+      }
+
+      .clip-meta {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 4px;
+        padding: 14px 16px 16px;
+      }
+
+      .clip-name {
+        color: var(--ink);
+        font-family: var(--serif-display);
+        font-size: 18px;
+        font-style: italic;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        margin-top: 8px;
+      }
+
+      table.results {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--paper);
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+
+      table.results th,
+      table.results td {
+        border-bottom: 1px solid var(--paper-line);
+        padding: 10px 14px;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      table.results th {
+        border-bottom: 1.5px solid var(--ink);
+        color: var(--ink-faint);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      table.results tr:hover td {
+        background: var(--paper-deep);
+      }
+
+      table.results .lead {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      table.results .name {
+        color: var(--ink);
+        font-family: var(--serif-body);
+        font-size: 16px;
+        font-style: italic;
+      }
+
+      .findings {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .finding h4 {
+        font-size: 22px;
+        font-weight: 400;
+      }
+
+      footer {
+        position: relative;
+        z-index: 2;
+        padding: 40px 0 60px;
+        color: var(--ink-faint);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .ornament {
+        margin-bottom: 12px;
+        color: var(--accent);
+        font-family: var(--serif-display);
+        font-size: 24px;
+        font-style: italic;
+      }
+
+      dialog {
+        width: min(1080px, calc(100% - 28px));
+        border: 1px solid rgba(243, 236, 220, 0.2);
+        background: #0a0807;
+        color: var(--paper);
+        padding: 0;
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.44);
+      }
+
+      dialog::backdrop {
+        background: rgba(10, 8, 7, 0.74);
+        backdrop-filter: blur(8px);
+      }
+
+      .dialog-close {
+        top: 14px;
+        right: 14px;
+      }
+
+      .dialog-video {
+        aspect-ratio: 16 / 9;
+        background: #0a0807;
+      }
+
+      .dialog-video video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: #0a0807;
+        object-fit: contain;
+      }
+
+      .dialog-caption {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        border-top: 1px solid rgba(243, 236, 220, 0.16);
+        padding: 16px 18px 18px;
+      }
+
+      .dialog-caption h3 {
+        margin: 0;
+        font-family: var(--serif-display);
+        font-size: 24px;
+        font-style: italic;
+        font-weight: 400;
+      }
+
+      .dialog-caption p {
+        margin: 3px 0 0;
+        color: rgba(243, 236, 220, 0.72);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .dialog-caption p:empty {
+        display: none;
+      }
+
+      .reveal,
+      .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+
+      @media (max-width: 1100px) {
+        .grid--three {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 900px) {
+        .contribs,
+        .findings {
+          grid-template-columns: 1fr;
+        }
+
+        .hero h1 {
+          padding-right: 0;
+        }
+
+        .signet {
+          display: none;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .wrap {
+          width: min(100% - 28px, 1180px);
+        }
+
+        body {
+          font-size: 16px;
+        }
+
+        .topbar {
+          position: static;
+        }
+
+        .topbar .row,
+        nav {
+          align-items: flex-start;
+          justify-content: flex-start;
+        }
+
+        .hero,
+        section {
+          padding: 54px 0;
+        }
+
+        .abstract {
+          columns: 1;
+        }
+
+        .group-head {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .group-tag {
+          width: 104px;
+        }
+
+        .grid--four,
+        .grid--three {
+          grid-template-columns: 1fr;
+        }
+
+        .dialog-caption {
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .signet img {
+          animation: none;
+          filter: saturate(1.15) brightness(1.02) drop-shadow(0 0 10px rgba(184, 55, 31, 0.28));
+        }
+
+        .clip,
+        .clip-frame::before {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="wrap row">
+        <div><span class="dot"></span>Anonymous submission | Under double-blind review</div>
+        <nav aria-label="Page sections">
+          <a href="#abstract">Abstract</a>
+          <a href="#demos">Demos</a>
+          <a href="#results">Results</a>
+          <a href="https://huggingface.co/datasets/anon-realitygap/RPG" target="_blank" rel="noopener noreferrer">Benchmark</a>
+        </nav>
+      </div>
+    </div>
+
+    <header class="hero" id="top">
+      <div class="wrap">
+        <a class="signet" href="#demos" aria-label="Jump to video demonstrations">
+          <img src="asset/rpg2.png" alt="">
+        </a>
+        <h1>Evaluating <span class="nowrap">AI-Manipulated</span> Video Detectors under <em><span class="nowrap">Real-World</span> Distribution Shifts</em></h1>
+
+        <div class="hero-actions">
+          <a class="hf-button" href="https://huggingface.co/datasets/anon-realitygap/RPG" target="_blank" rel="noopener noreferrer" aria-label="Open benchmark on Hugging Face">
+            <svg class="hf-logo" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+              <circle cx="18" cy="16" r="10.5" fill="#ffcc4d"></circle>
+              <circle cx="14" cy="13.5" r="1.5" fill="#5f4420"></circle>
+              <circle cx="22" cy="13.5" r="1.5" fill="#5f4420"></circle>
+              <path d="M13.2 18.2c1.4 1.7 3 2.6 4.8 2.6s3.4-.9 4.8-2.6" fill="none" stroke="#5f4420" stroke-width="1.9" stroke-linecap="round"></path>
+              <path d="M9.1 20.4c-3.9.8-6.2 3.4-5.3 5.7.8 2.1 4.7 1.7 7.5-1.2" fill="#ffcc4d" stroke="#5f4420" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M26.9 20.4c3.9.8 6.2 3.4 5.3 5.7-.8 2.1-4.7 1.7-7.5-1.2" fill="#ffcc4d" stroke="#5f4420" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M9.5 23.4c-1.2.5-2.1 1.3-2.5 2.2M26.5 23.4c1.2.5 2.1 1.3 2.5 2.2" fill="none" stroke="#5f4420" stroke-width="1.2" stroke-linecap="round"></path>
+            </svg>
+            <span>Benchmark</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="abstract">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="num">sec 01</span>
+            <h2>The <em>reality gap</em></h2>
+            <span class="rule"></span>
+          </div>
+
+          <div class="abstract">
+            <p>
+              Reality Perception Gap (<strong>RPG</strong>) exposes the deployment gap in AI-video
+              forensics: detectors tuned on clean clips break when videos are platform re-encoded,
+              post-processed, captured with camera artifacts, locally edited, or generated by frontier
+              models. RPG makes those shifts visible, so reviewers can see where synthetic-video
+              detection fails outside the lab.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="contributions">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="num">sec 02</span>
+            <h2>What is <em>new</em> in Reality Perception Gap</h2>
+            <span class="rule"></span>
+          </div>
+
+          <div class="contribs">
+            <article class="contrib">
+              <div class="contrib-title">
+                <div class="idx">i.</div>
+                <h3>Socially fragile content</h3>
+              </div>
+              <p>Crime, disaster, surveillance, traffic, and conflict scenes target domains where video authenticity carries practical consequence.</p>
+            </article>
+            <article class="contrib">
+              <div class="contrib-title">
+                <div class="idx">ii.</div>
+                <h3>Coupled distribution shifts</h3>
+              </div>
+              <p>Compression, re-encoding, post-processing, and camera artifacts are modeled together rather than as isolated clean-room perturbations.</p>
+            </article>
+            <article class="contrib">
+              <div class="contrib-title">
+                <div class="idx">iii.</div>
+                <h3>Hybrid manipulation</h3>
+              </div>
+              <p>RPG includes partially edited videos such as character replacement, video extension, and relighting, beyond the fully synthetic regime.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="demos">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="num">sec 03</span>
+            <h2>Video <em>demonstrations</em></h2>
+            <span class="rule"></span>
+          </div>
+
+          <div class="group" id="group-1">
+            <div class="group-head">
+              <div class="group-tag">Group 01</div>
+              <h3><em>Socially fragile</em> categories</h3>
+            </div>
+            <p class="group-blurb">
+              High-impact domains where manipulated video can cause social harm: combat, traffic,
+              natural disasters, and crime.
+            </p>
+
+            <div class="grid grid--four">
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/combat.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open Combat footage">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Combat footage</div>
+                </div>
+              </article>
+
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/traffic_wan.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open Traffic WAN">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Traffic incident</div>
+                </div>
+              </article>
+
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/flooding_4s.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open Natural disaster">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Natural disaster</div>
+                </div>
+              </article>
+
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/crime.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open Crime scene">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Crime scene</div>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="group" id="group-2">
+            <div class="group-head">
+              <div class="group-tag">Group 02</div>
+              <h3><em>Localized AI edits</em> in real footage</h3>
+            </div>
+            <p class="group-blurb">
+              Mixed-source clips where surrounding scene and camera statistics remain real while a
+              region, attribute, or temporal continuation is synthesized.
+            </p>
+
+            <div class="grid grid--three">
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/wan-animate.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open WAN Animate">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Character replacement</div>
+                </div>
+              </article>
+
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/video_extend.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open Video Extend">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Video extension</div>
+                </div>
+              </article>
+
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video autoplay muted loop playsinline preload="metadata" controls>
+                    <source src="asset/relighted_web.m4v" type="video/mp4">
+                    <source src="asset/relighted.mp4" type="video/mp4">
+                  </video>
+                  <button class="expand-button" type="button" aria-label="Open Relighted footage">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Relit footage</div>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="group" id="group-3">
+            <div class="group-head">
+              <div class="group-tag">Group 03</div>
+              <h3>Camera optical <em>artifacts</em></h3>
+            </div>
+            <p class="group-blurb">
+              Camera-side and camera-style artifact cases, including generated high-ISO noise,
+              that reveal whether detectors confuse optical imperfections, sensor noise, and focus shifts with synthesis residuals.
+            </p>
+
+            <div class="grid grid--four">
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/rolling_shutter_nosound.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open Rolling Shutter">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Rolling shutter</div>
+                </div>
+              </article>
+
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/chromatic_abb_nosound.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open Chromatic Aberration">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Chromatic aberration</div>
+                </div>
+              </article>
+
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/high_iso_nosound.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open High ISO">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">High ISO noise</div>
+                </div>
+              </article>
+
+              <article class="clip">
+                <div class="clip-frame" data-fallback="video unavailable">
+                  <video src="asset/auto_focusing_nosound.mp4" autoplay muted loop playsinline preload="metadata" controls></video>
+                  <button class="expand-button" type="button" aria-label="Open Auto Focusing">view</button>
+                </div>
+                <div class="clip-meta">
+                  <div class="clip-name">Autofocus hunting</div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="results">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="num">sec 04</span>
+            <h2>Detector <em>performance</em> on RPG</h2>
+            <span class="rule"></span>
+          </div>
+
+          <div class="table-wrap">
+            <table class="results">
+              <thead>
+                <tr>
+                  <th>Detector</th>
+                  <th>ACC</th>
+                  <th>Macro F1</th>
+                  <th>AUC up</th>
+                  <th>TPR fake</th>
+                  <th>TNR real</th>
+                  <th>TPR at 1% FPR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="name">D3</td>
+                  <td class="lead">0.685</td>
+                  <td class="lead">0.637</td>
+                  <td>0.689</td>
+                  <td class="lead">0.748</td>
+                  <td>0.537</td>
+                  <td>0.012</td>
+                </tr>
+                <tr>
+                  <td class="name">WaveRep</td>
+                  <td>0.591</td>
+                  <td>0.591</td>
+                  <td class="lead">0.803</td>
+                  <td>0.438</td>
+                  <td>0.945</td>
+                  <td class="lead">0.237</td>
+                </tr>
+                <tr>
+                  <td class="name">GenD</td>
+                  <td>0.330</td>
+                  <td>0.287</td>
+                  <td>0.583</td>
+                  <td>0.060</td>
+                  <td>0.955</td>
+                  <td>0.016</td>
+                </tr>
+                <tr>
+                  <td class="name">VideoFACT</td>
+                  <td>0.562</td>
+                  <td>0.479</td>
+                  <td>0.583</td>
+                  <td>0.562</td>
+                  <td>0.561</td>
+                  <td>0.025</td>
+                </tr>
+                <tr>
+                  <td class="name">FreqNet</td>
+                  <td>0.404</td>
+                  <td>0.404</td>
+                  <td>0.548</td>
+                  <td>0.285</td>
+                  <td>0.679</td>
+                  <td>0.025</td>
+                </tr>
+                <tr>
+                  <td class="name">AIGVDet</td>
+                  <td>0.179</td>
+                  <td>0.167</td>
+                  <td>0.546</td>
+                  <td>0.035</td>
+                  <td>0.956</td>
+                  <td>0.008</td>
+                </tr>
+                <tr>
+                  <td class="name">RINE</td>
+                  <td>0.318</td>
+                  <td>0.269</td>
+                  <td>0.516</td>
+                  <td>0.042</td>
+                  <td>0.958</td>
+                  <td>0.013</td>
+                </tr>
+                <tr>
+                  <td class="name">UFD</td>
+                  <td>0.351</td>
+                  <td>0.326</td>
+                  <td>0.510</td>
+                  <td>0.113</td>
+                  <td>0.903</td>
+                  <td>0.016</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="findings">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="num">sec 05</span>
+            <h2>Key <em>findings</em></h2>
+            <span class="rule"></span>
+          </div>
+
+          <div class="findings">
+            <article class="finding">
+              <div class="kicker">Compression as adversary</div>
+              <h4>Platform encoding erases many frequency cues detectors are trained to read.</h4>
+              <p>Deployment-grade compression removes fragile high-frequency residuals, exposing detectors that perform well only under clean laboratory conditions.</p>
+            </article>
+            <article class="finding">
+              <div class="kicker">Generator coverage</div>
+              <h4>Frontier generators, not data volume alone, set the binding constraint.</h4>
+              <p>Per-generator behavior varies substantially, suggesting that future benchmarks need deliberate coverage of modern synthesis pipelines.</p>
+            </article>
+            <article class="finding">
+              <div class="kicker">Threshold calibration</div>
+              <h4>Default thresholds are unstable across realistic deployment shifts.</h4>
+              <p>Detector operating points can drift toward always-real or always-fake behavior when clean evaluation assumptions are removed.</p>
+            </article>
+            <article class="finding">
+              <div class="kicker">Optical decoys</div>
+              <h4>Camera-style artifacts can look like generative artifacts.</h4>
+              <p>Rolling shutter, chromatic aberration, generated high ISO noise, and autofocus hunting stress whether models distinguish capture physics from synthesis traces.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <div class="ornament">RPG</div>
+      Anonymous project page<br>
+      Hosted for review purposes only.
+    </footer>
+
+    <dialog id="video-dialog" aria-labelledby="dialog-title">
+      <button class="dialog-close" type="button" aria-label="Close video dialog">close</button>
+      <div class="dialog-video">
+        <video id="dialog-player" autoplay controls muted loop playsinline></video>
+      </div>
+      <div class="dialog-caption">
+        <div>
+          <h3 id="dialog-title">Video demo</h3>
+          <p id="dialog-source"></p>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      const playAllDemos = () => {
+        document.querySelectorAll(".clip video").forEach(video => {
+          video.play().catch(() => {});
+        });
+      };
+
+      window.addEventListener("load", playAllDemos);
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          playAllDemos();
+        }
+      });
+
+      document.querySelectorAll(".clip-frame video").forEach(video => {
+        video.addEventListener("error", () => {
+          video.parentElement.classList.add("missing");
+          video.style.display = "none";
+        });
+
+        video.addEventListener("loadeddata", () => {
+          video.parentElement.classList.remove("missing");
+        });
+      });
+
+      const dialog = document.querySelector("#video-dialog");
+      const dialogPlayer = document.querySelector("#dialog-player");
+      const dialogTitle = document.querySelector("#dialog-title");
+      const dialogSource = document.querySelector("#dialog-source");
+
+      document.querySelectorAll(".expand-button").forEach(button => {
+        button.addEventListener("click", event => {
+          event.stopPropagation();
+          const card = button.closest(".clip");
+          const cardVideo = card.querySelector("video");
+          const source =
+            cardVideo.currentSrc ||
+            cardVideo.getAttribute("src") ||
+            cardVideo.querySelector("source")?.getAttribute("src");
+
+          document.querySelectorAll(".clip video").forEach(video => video.pause());
+          dialogPlayer.src = source;
+          dialogTitle.textContent = card.querySelector(".clip-name").textContent;
+          dialogSource.textContent = "";
+          dialog.showModal();
+          dialogPlayer.play().catch(() => {});
+        });
+      });
+
+      const closeDialog = () => {
+        dialogPlayer.pause();
+        dialogPlayer.removeAttribute("src");
+        dialogPlayer.load();
+        dialog.close();
+        playAllDemos();
+      };
+
+      document.querySelector(".dialog-close").addEventListener("click", closeDialog);
+      dialog.addEventListener("click", event => {
+        if (event.target === dialog) {
+          closeDialog();
+        }
+      });
+      dialog.addEventListener("cancel", event => {
+        event.preventDefault();
+        closeDialog();
+      });
+
+    </script>
+  </body>
+</html>
